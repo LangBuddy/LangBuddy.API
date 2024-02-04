@@ -2,5 +2,5 @@
 
 namespace Services.Accounts.Commands.UpdateAccount
 {
-    public record UpdateAccountCommand(string CurrentEmail, string? Email, string? Nickname, string? PasswordHash) : IRequest;
+    public record UpdateAccountCommand(long AccountId, string? Email, string? Nickname, string? PasswordHash) : IRequest;
 }

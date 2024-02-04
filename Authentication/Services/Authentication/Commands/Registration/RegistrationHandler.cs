@@ -1,26 +1,29 @@
 ﻿using MediatR;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Http;
 using Services.Http;
 using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
+using Services.Options;
+using System.IdentityModel.Tokens.Jwt;
+using Models.Responses;
+using Microsoft.Extensions.Options;
 
 namespace Services.Authentication.Commands.Registration
 {
     public class RegistrationHandler : IRequestHandler<RegistrationCommand>
     {
         private readonly IHttpApiService _apiService;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly JwtConfiguration _jwtConfiguration;
+
 
         public RegistrationHandler(IHttpApiService apiService,
-            IHttpContextAccessor httpContextAccessor) 
+           IOptions<JwtConfiguration> jwtConfiguration) 
         {
             _apiService = apiService;
-            _httpContextAccessor = httpContextAccessor;
+            _jwtConfiguration = jwtConfiguration.Value;
         }
         public async Task Handle(RegistrationCommand request, CancellationToken cancellationToken)
         {
-            var res = await _apiService.GetAccountByEmail(request.Email);
+            var res = await _apiService.GetAccountById(request.Email);
 
             if(res != null)
             {
@@ -30,24 +33,6 @@ namespace Services.Authentication.Commands.Registration
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
             await _apiService.CreateAccountSend(email: request.Email, nickname: request.Nickname, passwordHash: passwordHash);
-
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.Name, request.Nickname),
-                new Claim(ClaimTypes.Email,request.Email)
-            };
-
-            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-            await _httpContextAccessor.HttpContext.SignInAsync(
-                CookieAuthenticationDefaults.AuthenticationScheme,
-                new ClaimsPrincipal(identity),
-                new AuthenticationProperties
-                {
-                    IsPersistent = false   //remember me
-                }
-            );
-
         }
     }
 }

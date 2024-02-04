@@ -15,11 +15,11 @@ namespace Services.Accounts.Commands.UpdateAccount
         public async Task Handle(UpdateAccountCommand request, CancellationToken cancellationToken)
         {
             var findAccount = await _dbContext.Accounts
-                .FirstOrDefaultAsync(el => el.DeleteDate != null && el.Email.Equals(request.CurrentEmail));
+                .FirstOrDefaultAsync(el => el.DeleteDate != null && el.Id.Equals(request.AccountId), cancellationToken);
 
             if (findAccount == null)
             {
-                throw new ArgumentNullException($"{nameof(request.CurrentEmail)}");
+                throw new ArgumentNullException($"{nameof(request.AccountId)}");
             }
 
             if (request.Email is not null)
@@ -39,7 +39,7 @@ namespace Services.Accounts.Commands.UpdateAccount
 
             findAccount.SetUpdateTime();
 
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync(cancellationToken);
         }
     }
 }

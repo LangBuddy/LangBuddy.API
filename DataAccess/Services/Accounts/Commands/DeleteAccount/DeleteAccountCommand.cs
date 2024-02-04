@@ -2,5 +2,5 @@
 
 namespace Services.Accounts.Commands.DeleteAccount
 {
-    public record DeleteAccountCommand(string Email): IRequest;
+    public record DeleteAccountCommand(long AccountId): IRequest;
 }

@@ -6,6 +6,7 @@ namespace Database
     public class DataDbContext: DbContext
     {
         public DbSet<Accounts> Accounts { get; set; }
+        public DbSet<Users> Users { get; set; }
 
         public DataDbContext(DbContextOptions<DataDbContext> options): base(options)
         {

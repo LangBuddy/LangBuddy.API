@@ -9,5 +9,7 @@ namespace Database.Entity
         public string Email { get; set; }
 
         public string PasswordHash { get; set; }
+        public long? UserId { get; set; }
+        public Users? User { get; set; }
     }
 }

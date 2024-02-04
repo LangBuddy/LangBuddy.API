@@ -16,7 +16,11 @@ namespace Services.Accounts.Commands.CreateAccount
         public async Task Handle(CreateAccountCommand request, CancellationToken cancellationToken)
         {
             var findAccount = await _dbContext.Accounts
-                .FirstOrDefaultAsync(el => el.DeleteDate != null && (el.Nickname.Equals(request.Nickname) || el.Email.Equals(request.Email)));
+                .FirstOrDefaultAsync(
+                    el => el.DeleteDate != null &&
+                    (el.Nickname.Equals(request.Nickname) || el.Email.Equals(request.Email)),
+                    cancellationToken
+                );
 
             if (findAccount != null)
             {
@@ -32,9 +36,9 @@ namespace Services.Accounts.Commands.CreateAccount
 
             account.SetCreateTime();
 
-            await _dbContext.Accounts.AddAsync(account);
+            await _dbContext.Accounts.AddAsync(account, cancellationToken);
 
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync(cancellationToken);
         }
     }
 }

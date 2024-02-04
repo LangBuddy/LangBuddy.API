@@ -1,13 +1,12 @@
 ﻿using MediatR;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models.Requests;
+using Models.Responses;
 using Services.Authentication.Commands.Login;
 using Services.Authentication.Commands.Registration;
+using Services.Exceptions;
 using System.Security.Claims;
-using System.Security.Principal;
 
 namespace Authentication.Controllers
 {
@@ -25,12 +24,16 @@ namespace Authentication.Controllers
         {
             try
             {
-                await _mediator.Send(new LoginCommand(
+                var res = await _mediator.Send(new LoginCommand(
                     Email: loginRequest.Email,
                     Password: loginRequest.Password
                 ));
 
-                return Ok();
+                return Ok(res);
+            }
+            catch (ValidationException ex)
+            {
+                return StatusCode(422, ex.FieldErrorValidation);
             }
             catch (Exception ex)
             {
@@ -51,6 +54,10 @@ namespace Authentication.Controllers
 
                 return Ok();
             }
+            catch(ValidationException ex)
+            {
+                return StatusCode(422, ex.FieldErrorValidation);
+            }
             catch (Exception ex)
             {
                 return BadRequest(ex.Message);
@@ -65,11 +72,20 @@ namespace Authentication.Controllers
         }
 
         [Authorize]
-        [HttpPost("logout")]
-        public async Task<IActionResult> Logout()
+        [HttpGet("account-data")]
+        public async Task<IActionResult> GetAccountData()
         {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return Ok();
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
+            var name = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+            var email = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+            var accountId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+            return Ok(new AccountDataResponse(
+                Id: long.Parse(accountId),
+                UserId: userId.Length > 0? long.Parse(userId) : null,
+                Email: email,
+                Nickname: name
+            ));
         }
     }
 }

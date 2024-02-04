@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Models.Responses;
 
 namespace Services.Authentication.Commands.Registration
 {

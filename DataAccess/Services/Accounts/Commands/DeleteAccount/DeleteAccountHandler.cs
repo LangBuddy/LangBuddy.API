@@ -16,16 +16,16 @@ namespace Services.Accounts.Commands.DeleteAccount
         public async Task Handle(DeleteAccountCommand request, CancellationToken cancellationToken)
         {
             var findAccount = await _dbContext.Accounts
-                .FirstOrDefaultAsync(el => el.DeleteDate != null && el.Email.Equals(request.Email));
+                .FirstOrDefaultAsync(el => el.DeleteDate != null && el.Id.Equals(request.AccountId), cancellationToken);
 
             if (findAccount == null)
             {
-                throw new ArgumentNullException($"{nameof(request.Email)}");
+                throw new ArgumentNullException($"{nameof(request.AccountId)}");
             }
 
-            findAccount.SeDeleteTime();
+            findAccount.SetDeleteTime();
 
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync(cancellationToken);
         }
     }
 }

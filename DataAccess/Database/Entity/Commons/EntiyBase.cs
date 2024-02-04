@@ -12,7 +12,7 @@
             CreateDate = DateTime.UtcNow;
         }
 
-        public void SeDeleteTime()
+        public void SetDeleteTime()
         {
             DeleteDate = DateTime.UtcNow;
         }

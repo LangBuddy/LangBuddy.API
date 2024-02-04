@@ -7,7 +7,7 @@ namespace Services.Http
 {
     public interface IHttpApiService
     {
-        Task<GetAccountResponse> GetAccountByEmail(string email);
+        Task<GetAccountResponse> GetAccountById(string email);
         Task CreateAccountSend(string email, string nickname, string passwordHash);
     }
     public class HttpApiService: IHttpApiService
@@ -21,7 +21,7 @@ namespace Services.Http
             _httpService = httpService;
         }
 
-        public async Task<GetAccountResponse> GetAccountByEmail(string email)
+        public async Task<GetAccountResponse> GetAccountById(string email)
         {
             var res = await _httpService.Send<GetAccountResponse>(
                 endpoint: $"{_options.DataAccess}/accounts/{email}",

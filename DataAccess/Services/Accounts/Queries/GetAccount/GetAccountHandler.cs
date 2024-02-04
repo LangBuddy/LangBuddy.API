@@ -15,7 +15,7 @@ namespace Services.Accounts.Queries.GetAccount
         public async Task<Database.Entity.Accounts> Handle(GetAccountQuery request, CancellationToken cancellationToken)
         {
             var account = await _dbContext.Accounts
-                .FirstOrDefaultAsync(el => el.Email.Equals(request.Email));
+                .FirstOrDefaultAsync(el => el.Email.Equals(request.Email), cancellationToken);
 
             if(account == null)
             {

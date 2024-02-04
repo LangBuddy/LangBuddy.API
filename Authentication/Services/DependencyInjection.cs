@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Services.Authentication;
 using Services.Http;
@@ -11,15 +10,15 @@ namespace Services
     {
         public static IServiceCollection AddServices(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddMediatR(cf => cf.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
 
             services.Configure<ApiOptions>(u => configuration.GetSection("ApiOptions").Bind(u));
+            services.Configure<JwtConfiguration>(u => configuration.GetSection("JwtConfiguration").Bind(u));
 
             services.AddTransient<IHttpService, HttpService>();
             services.AddTransient<IHttpApiService, HttpApiService>();
 
-            services.AddAuthenticationConfiguration();
+            services.AddAuthenticationConfiguration(configuration);
 
             return services;
         }

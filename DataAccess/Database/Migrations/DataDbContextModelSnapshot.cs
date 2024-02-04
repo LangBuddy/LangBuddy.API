@@ -33,7 +33,7 @@ namespace Database.Migrations
                     b.Property<DateTime>("CreateDate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasDefaultValue(new DateTime(2023, 12, 31, 7, 42, 44, 333, DateTimeKind.Utc).AddTicks(8916));
+                        .HasDefaultValue(new DateTime(2024, 1, 6, 16, 36, 1, 579, DateTimeKind.Utc).AddTicks(8071));
 
                     b.Property<DateTime?>("DeleteDate")
                         .HasColumnType("timestamp with time zone");
@@ -53,6 +53,9 @@ namespace Database.Migrations
                     b.Property<DateTime?>("UpdateDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<long?>("UserId")
+                        .HasColumnType("bigint");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
@@ -61,7 +64,61 @@ namespace Database.Migrations
                     b.HasIndex("Nickname")
                         .IsUnique();
 
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
                     b.ToTable("Accounts");
+                });
+
+            modelBuilder.Entity("Database.Entity.Users", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("BirthDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreateDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeleteDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Gender")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("Database.Entity.Accounts", b =>
+                {
+                    b.HasOne("Database.Entity.Users", "User")
+                        .WithOne("Account")
+                        .HasForeignKey("Database.Entity.Accounts", "UserId");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Database.Entity.Users", b =>
+                {
+                    b.Navigation("Account")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

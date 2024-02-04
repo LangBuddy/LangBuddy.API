@@ -15,7 +15,7 @@ namespace Services.Accounts.Queries.GetAccounts
 
         public async Task<List<Database.Entity.Accounts>> Handle(GetAccountsQuery request, CancellationToken cancellationToken)
         {
-            return await _dbContext.Accounts.ToListAsync();
+            return await _dbContext.Accounts.ToListAsync(cancellationToken);
         }
     }
 }

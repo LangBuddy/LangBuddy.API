@@ -65,14 +65,14 @@ namespace Web.Controllers
             }
         }
 
-        [HttpPatch("{email}")]
-        public async Task<IActionResult> UpdateAccount([FromRoute] string email, 
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> UpdateAccount([FromRoute] long id, 
             [FromBody] AccountUpdateRequest accountUpdateRequest)
         {
             try
             {
                 await _mediator.Send(new UpdateAccountCommand(
-                    CurrentEmail: email,
+                    AccountId: id,
                     Email: accountUpdateRequest.Email,
                     Nickname: accountUpdateRequest.Nickname,
                     PasswordHash: accountUpdateRequest.PasswordHash)
@@ -87,12 +87,12 @@ namespace Web.Controllers
         }
 
 
-        [HttpDelete("{email}")]
-        public async Task<IActionResult> DeleteAccount([FromRoute] string email)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteAccount([FromRoute] long id)
         {
             try
             {
-                await _mediator.Send(new DeleteAccountCommand(email));
+                await _mediator.Send(new DeleteAccountCommand(id));
                 return Ok();
             }
             catch (Exception ex)
