@@ -1,11 +1,8 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Service;
 using Service.Middlewares;
 using Service.Options;
-using System.Security.Claims;
+using Web.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
@@ -19,12 +16,14 @@ builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
 .Build();
 
 builder.Services.Configure<ApiOptions>(u => builder.Configuration.GetSection("ApiOptions").Bind(u));
-
+    
 builder.Services.AddServices(builder.Configuration);
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddSignalR();
 
 builder.Services.AddSwaggerGen(opt =>
 {
@@ -54,8 +53,10 @@ builder.Services.AddSwaggerGen(opt =>
     });
 });
 
-
 var app = builder.Build();
+
+app.MapHub<ChatHub>("/api/private/chat-hub");
+app.MapHub<MessagesHub>("/api/private/messages-hub");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Debug")
@@ -66,10 +67,16 @@ if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Debug
 
 app.UseHttpsRedirection();
 
+app.UseCors(x => x
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .SetIsOriginAllowed(origin => true) // allow any origin
+        .AllowCredentials());
+
 app.UseWhen(
     context => 
         context.Request.Path.StartsWithSegments("/api/Authentication/check-auth") || 
-        context.Request.Path.StartsWithSegments("/api/PersonalInformation"),
+        context.Request.Path.StartsWithSegments("/api/private"),
     appBuilder =>
     {
         appBuilder.UseAuthenticationMiddleware();

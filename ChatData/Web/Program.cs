@@ -1,7 +1,6 @@
 using Database;
 using Microsoft.EntityFrameworkCore;
 using Service;
-using Web.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +13,6 @@ builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
     .Build();
 
 builder.Services.AddServices(builder.Configuration);
-builder.Services.AddSignalR();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -40,7 +38,5 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
-
-//app.MapHub<ChatsHub>("/chat");
 
 app.Run();

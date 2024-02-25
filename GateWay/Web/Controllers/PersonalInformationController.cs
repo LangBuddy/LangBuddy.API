@@ -3,7 +3,7 @@
 namespace Web.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/private/[controller]")]
     public class PersonalInformationController: ControllerBase
     {
     }

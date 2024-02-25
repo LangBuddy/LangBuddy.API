@@ -1,0 +1,99 @@
+version: '3.9'
+
+services:
+  langbaddy-db:
+    image: postgres:latest
+    restart: always
+    container_name: 'langbaddy-db'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: LangBuddy.Develop
+    ports:
+      - 10001:5432
+    networks:
+      - langbaddy-deb
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  langbuddy-cache-data:
+    container_name: 'langbuddy-cache-data'
+    image: redis:latest
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - /path/to/local/dаta:/root/redis
+      - /path/to/local/redis.conf:/usr/local/etc/redis/redis.conf
+      - cache:/data
+    networks:
+      - langbaddy-deb
+    # environment:
+    #   - REDIS_PASSWORD=my-password
+    #   - REDIS_PORT=6379
+    #   - REDIS_DATABASES=16
+
+  langbaddy-data-access:
+    container_name: 'langbaddy-data-access'
+    depends_on:
+      - 'langbaddy-db'
+    build:
+      dockerfile: ./DataAccess/Dockerfile
+      context: ./DataAccess
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+    ports:
+      - 8010:80
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - LOGS_PATH=/var/log/langbaddy-data-access
+    networks:
+      - langbaddy-deb
+
+  langbaddy-chat-data:
+      container_name: 'langbaddy-chat-data'
+      depends_on:
+        - 'langbaddy-db'
+        - 'langbuddy-cache-data'
+      build:
+        dockerfile: ./Web/Dockerfile
+        context: ./ChatData
+      deploy:
+        resources:
+          limits:
+            memory: 1024M
+      ports:
+        - 8009:80
+      environment:
+        - ASPNETCORE_ENVIRONMENT=Development
+        - LOGS_PATH=/var/log/langbaddy-chat-data
+      networks:
+        - langbaddy-deb
+      
+  langbaddy-authentication:
+    container_name: 'langbaddy-authentication'
+    build:
+      dockerfile: ./Authentication/Dockerfile
+      context: ./Authentication
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+    ports:
+      - 8002:80
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - LOGS_PATH=/var/log/langbaddy-authentication
+    networks:
+      - langbaddy-deb
+
+volumes:
+  postgres-data:
+  cache:
+
+networks:
+  langbaddy-deb: {
+    driver: bridge
+  }

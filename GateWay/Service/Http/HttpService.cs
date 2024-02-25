@@ -88,13 +88,13 @@ namespace Service.Http
             };
         }
 
-        public async Task<HttpResponseDefault> Send(string endpoint, HttpMethod httpMethod, string? token)
+        public async Task<HttpResponseDefault> Send(string endpoint, HttpMethod httpMethod, string? token = null)
         {
             var request = new HttpRequestMessage(httpMethod, endpoint);
 
             if (token is not null) 
             {
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Split(' ')[1]);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             }
 
             var response = await _httpClient.SendAsync(request);

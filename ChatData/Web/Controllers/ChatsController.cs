@@ -1,10 +1,10 @@
-﻿using Database.Entity;
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
+using Models.Requests;
 using Service.Chats.Commands.CreateChat;
+using Service.Chats.Commands.DeleteChat;
+using Service.Chats.Commands.UpdateChat;
 using Service.Chats.Queries.GetChatsByUserId;
-using Web.Hubs;
 
 namespace Web.Controllers
 {
@@ -12,11 +12,9 @@ namespace Web.Controllers
     public class ChatsController: ControllerBase
     {
         private readonly IMediator _mediator;
-        private readonly IHubContext<ChatsHub, IChatsHub> _chatHubContext;
-        public ChatsController(IMediator mediator, IHubContext<ChatsHub, IChatsHub> chatHubContext)
+        public ChatsController(IMediator mediator)
         {
             _mediator = mediator;
-            _chatHubContext = chatHubContext;
         }
 
         [HttpPost]
@@ -34,15 +32,43 @@ namespace Web.Controllers
             }
         }
 
-        [HttpGet("{userId}")]
-        public async Task<ActionResult<List<ChatRoom>>> GetChat([FromRoute] long userId)
+        [HttpPatch("{chatId}")]
+        public async Task<IActionResult> UpdateChat([FromRoute] long chatId, [FromBody] UpdateChatRequest updateChatRequest)
         {
-            //User.Identity.Name
+            try
+            {
+                await _mediator.Send(new UpdateChatCommand(chatId, updateChatRequest.Title, updateChatRequest.UsersId));
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpDelete("{chatId}")]
+        public async Task<IActionResult> DeleteChat([FromRoute] long chatId)
+        {
+            try
+            {
+                await _mediator.Send(new DeleteChatCommand(chatId));
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("{userId}")]
+        public async Task<IActionResult> GetChats([FromRoute] long userId)
+        {
 
             try
             {
                 var res = await _mediator.Send(new GetChatsByUserIdQuery(UserId: userId));
-                await _chatHubContext.Clients.All.GetChats(res);
                 return Ok(res);
 
             }

@@ -18,6 +18,11 @@ namespace Services.Users.Commands.CreateUser
             var account = await _dataDbContext.Accounts
                 .FirstOrDefaultAsync(el => el.Id == request.AccountId, cancellationToken);
 
+            if (account == null)
+            {
+                throw new ArgumentNullException(nameof(request.AccountId));   
+            }
+
             var user = new Database.Entity.Users()
             {
                 FirstName = request.FirstName,

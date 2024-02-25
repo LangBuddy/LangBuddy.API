@@ -6,7 +6,7 @@ namespace Database.Entity
     {
         public string Value { get; set; }
         public long ChatRoomId { get; set; }
-        public long UseId { get; set; }
+        public long UserId { get; set; }
         public ChatRoom ChatRoom { get; set; }
     }
 }

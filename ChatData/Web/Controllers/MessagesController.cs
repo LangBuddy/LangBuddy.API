@@ -1,12 +1,11 @@
 ﻿using Database.Entity;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
+using Models.Requests;
 using Service.Chats.Commands.CreateMessage;
-using Service.Chats.Queries.GetChatsByUserId;
+using Service.Chats.Commands.DeleteMessage;
+using Service.Chats.Commands.UpdateMessage;
 using Service.Chats.Queries.GetMessagesByChatId;
-using System;
-using Web.Hubs;
 
 namespace Web.Controllers
 {
@@ -14,12 +13,9 @@ namespace Web.Controllers
     public class MessagesController: ControllerBase
     {
         private readonly IMediator _mediator;
-        private readonly IHubContext<MessagesHub, IMessagesHub> _messagesHubContext;
-
-        public MessagesController(IMediator mediator, IHubContext<MessagesHub, IMessagesHub> messagesHubContext)
+        public MessagesController(IMediator mediator)
         {
             _mediator = mediator;
-            _messagesHubContext = messagesHubContext;
         }
 
         [HttpPost]
@@ -37,6 +33,37 @@ namespace Web.Controllers
             }
         }
 
+        [HttpPatch("{mesageId}")]
+        public async Task<IActionResult> UpdateMessage([FromRoute] long mesageId,
+            [FromBody] UpdateMessageRequest updateMessageRequest)
+        {
+            try
+            {
+                await _mediator.Send(new UpdateMessageCommand(mesageId, updateMessageRequest.Value));
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpDelete("{mesageId}")]
+        public async Task<IActionResult> DeleteMessage([FromRoute] long mesageId)
+        {
+            try
+            {
+                await _mediator.Send(new DeleteMessageCommand(mesageId));
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
         [HttpGet("{chatId}")]
         public async Task<ActionResult<IEnumerable<Message>>> GetMessages([FromRoute] long chatId)
         {
@@ -44,8 +71,6 @@ namespace Web.Controllers
             try
             {
                 var res = await _mediator.Send(new GetMessagesByChatIdQuery(chatId));
-
-                await _messagesHubContext.Clients.All.GetMessages(res);
 
                 return Ok(res);
             }

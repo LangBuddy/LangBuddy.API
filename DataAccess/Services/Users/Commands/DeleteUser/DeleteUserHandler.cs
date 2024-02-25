@@ -17,6 +17,11 @@ namespace Services.Users.Commands.DeleteUser
             var user = await _dbContext.Users
                 .FirstOrDefaultAsync(el => el.Id == request.UserId, cancellationToken);
 
+            if (user == null)
+            {
+                throw new ArgumentNullException(nameof(request.UserId));
+            }
+
             user.SetDeleteTime();
 
             await _dbContext.SaveChangesAsync(cancellationToken);

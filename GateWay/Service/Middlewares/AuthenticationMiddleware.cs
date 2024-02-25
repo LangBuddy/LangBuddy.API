@@ -1,9 +1,9 @@
-﻿using MediatR;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Service.Http;
 using Service.Options;
-using System.Net.Http.Headers;
+using System.IdentityModel.Tokens.Jwt;
+using System.IO;
 
 namespace Service.Middlewares
 {
@@ -24,25 +24,32 @@ namespace Service.Middlewares
 
         public async Task InvokeAsync(HttpContext context)
         {
-            // Здесь можно добавить логику аутентификации, например, отправить запрос на сервер аутентификации и проверить результат
-            // В данном примере просто проверяем, что пользователь авторизирован
-
             string token = context.Request.Headers["Authorization"];
 
-            var res = await _httpService.Send(
-                endpoint: $"{_options.Authentication}/check-auth",
-                httpMethod: HttpMethod.Get,
-                token
-            );
+            var handler = new JwtSecurityTokenHandler();
 
-            if (!res.Status)
+            if(token is not null)
             {
-                context.Response.StatusCode = (int)res.Code; // Unauthorized
-                await context.Response.WriteAsync("User is not authenticated");
-                return;
+                token = token.Split(' ')[1];
+
+                var res = await _httpService.Send(
+                    endpoint: $"{_options.Authentication}/check-auth",
+                    httpMethod: HttpMethod.Get,
+                    token
+                );
+
+                if (res.Status)
+                {
+                    await _next(context);
+                    return;
+                }
+
+                await _next(context);
             }
 
-            await _next(context);
+            context.Response.StatusCode = 401; // Unauthorized
+            await context.Response.WriteAsync("User is not authenticated");
+            return;
         }
     }
 }

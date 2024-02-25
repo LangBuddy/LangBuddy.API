@@ -4,10 +4,11 @@ using Database.Data;
 using Database.Entity;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Models.Responses;
 
 namespace Service.Chats.Queries.GetChatsByUserId
 {
-    public class GetChatsByUserIdHandler : IRequestHandler<GetChatsByUserIdQuery, List<ChatRoom>>
+    public class GetChatsByUserIdHandler : IRequestHandler<GetChatsByUserIdQuery, List<ChatResponse>>
     {
         private readonly DataDbContext _dataDbContext;
         private readonly ICacheService _cacheService;
@@ -18,14 +19,14 @@ namespace Service.Chats.Queries.GetChatsByUserId
             _cacheService = cacheService;
         }
 
-        public async Task<List<ChatRoom>> Handle(GetChatsByUserIdQuery request, CancellationToken cancellationToken)
+        public async Task<List<ChatResponse>> Handle(GetChatsByUserIdQuery request, CancellationToken cancellationToken)
         {
             var chatsCache = await _cacheService.GetData<List<ChatRoom>>
                 (request.UserId.ToString(), CachePrefixes.Chats, cancellationToken);
 
             if (chatsCache is not null)
             {
-                return chatsCache;
+                return chatsCache.Select(el => new ChatResponse(el.Id, el.Title)).ToList();
             }
 
             var chats = await _dataDbContext.ChatRooms
@@ -34,7 +35,7 @@ namespace Service.Chats.Queries.GetChatsByUserId
 
             await _cacheService.SetData<List<ChatRoom>>(request.UserId.ToString(), CachePrefixes.Chats, chats, cancellationToken);
 
-            return chats;
+            return chats.Select(el => new ChatResponse(el.Id, el.Title)).ToList();
 
         }
     }

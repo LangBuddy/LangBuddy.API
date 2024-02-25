@@ -33,7 +33,7 @@ namespace Service.Chats.Commands.CreateChat
 
             await _dataDbContext.SaveChangesAsync(cancellationToken);
 
-            request.UsersId.ForEach(userId => _cacheService.RemoveData(userId.ToString(), CachePrefixes.Chats, cancellationToken));
+            chat.UsersId.ForEach(userId => _cacheService.RemoveData(userId.ToString(), CachePrefixes.Chats, cancellationToken));
         }
     }
 }

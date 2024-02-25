@@ -33,14 +33,16 @@ namespace Service.Chats.Commands.CreateMessage
             {
                 Value = request.Value,
                 ChatRoom = chat,
-                UseId = request.UseId
+                UserId = request.UserId
             };
+
+            message.SetCreateTime();
 
             await _dataDbContext.Messages.AddAsync(message);
 
-            await _dataDbContext.SaveChangesAsync();
+            await _dataDbContext.SaveChangesAsync(cancellationToken);
 
-            await _cacheService.RemoveData(request.ChatRoomId.ToString(), CachePrefixes.Messages, cancellationToken);
+            await _cacheService.RemoveData(chat.Id.ToString(), CachePrefixes.Messages, cancellationToken);
         }
     }
 }

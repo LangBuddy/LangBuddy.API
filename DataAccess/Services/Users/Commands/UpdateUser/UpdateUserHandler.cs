@@ -17,6 +17,11 @@ namespace Services.Users.Commands.UpdateUser
             var user = await _dbContext.Users
                 .FirstOrDefaultAsync(el => el.Id == request.UserId, cancellationToken);
 
+            if(user == null)
+            {
+                throw new ArgumentNullException(nameof(request.UserId));  
+            }
+
             if(request.FirstName is not null)
             {
                 user.FirstName = request.FirstName;

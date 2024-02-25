@@ -1,7 +1,7 @@
-﻿using Database.Entity;
-using MediatR;
+﻿using MediatR;
+using Models.Responses;
 
 namespace Service.Chats.Queries.GetChatsByUserId
 {
-    public record GetChatsByUserIdQuery(long UserId): IRequest<List<ChatRoom>>;
+    public record GetChatsByUserIdQuery(long UserId): IRequest<List<ChatResponse>>;
 }
