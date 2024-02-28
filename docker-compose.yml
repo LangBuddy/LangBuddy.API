@@ -148,6 +148,25 @@ services:
       networks:
         - langbaddy-deb
 
+  langbaddy-gate-way:
+    container_name: 'langbaddy-gate-way'
+    depends_on:
+      - 'langbaddy-db'
+    build:
+      dockerfile: ./Web/Dockerfile
+      context: ./GateWay
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+    ports:
+      - 8001:80
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - LOGS_PATH=/var/log/langbaddy-gate-way
+    networks:
+      - langbaddy-deb
+
 volumes:
   postgres-data:
   cache:
