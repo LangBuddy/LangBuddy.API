@@ -1,6 +1,24 @@
 version: '3.9'
 
 services:
+  langbuddy-rabbitmq:
+    image: rabbitmq:management
+    container_name: langbuddy-rabbitmq
+    hostname: rabbitmq
+    restart: always
+    volumes:
+      - ./RabbitMq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - langbaddy-deb
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:15672"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
   langbaddy-db:
     image: postgres:latest
     restart: always
@@ -88,6 +106,47 @@ services:
       - LOGS_PATH=/var/log/langbaddy-authentication
     networks:
       - langbaddy-deb
+
+  email-sender:
+    container_name: 'email-sender'
+    build:
+      dockerfile: ./Dockerfile
+      context: ./LangBuddy.EmailSending
+    deploy:
+      resources:
+        limits:
+          memory: 2048M
+    ports:
+      - 80:8015
+    environment:
+      - LOGS_PATH=/var/log/dev-email-sender
+      - MAIL_HOST=smtp.gmail.com
+      - MAIL_USER=lang.buddy.official@gmail.com
+      - MAIL_PASSWORD=jzfagybcionxninc
+      - MAIL_FROM=lang.buddy.official@gmail.com
+
+      - MAIL_TRANSPORT=smtp://lang.buddy.official@gmail.com:jzfagybcionxninc@smtp.gmail.com
+    networks:
+      - langbaddy-deb
+
+  consumer-1:
+      container_name: 'consumer-1'
+      build:
+        dockerfile: ./Dockerfile
+        context: ./Consumer
+      deploy:
+        resources:
+          limits:
+            memory: 1024M
+      ports:
+        - 8019:80
+      # depends_on:
+        # - email-sender
+      environment:
+        - ASPNETCORE_ENVIRONMENT=Development
+        - LOGS_PATH=/var/log/dev-consumer
+      networks:
+        - langbaddy-deb
 
 volumes:
   postgres-data:

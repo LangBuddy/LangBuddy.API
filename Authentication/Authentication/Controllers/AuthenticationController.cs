@@ -68,21 +68,21 @@ namespace Authentication.Controllers
         [HttpGet("check-auth")]
         public async Task<IActionResult> CheckAuth()
         {
-            return Ok();
-        }
-
-        [Authorize]
-        [HttpGet("account-data")]
-        public async Task<IActionResult> GetAccountData()
-        {
             var userId = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
             var name = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
             var email = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
             var accountId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
-            return Ok(new AccountDataResponse(
+            var statusCode = 200;
+
+            if(String.IsNullOrEmpty(userId))
+            {
+                statusCode = 403;
+            }
+
+            return StatusCode(statusCode, new AccountDataResponse(
                 Id: long.Parse(accountId),
-                UserId: userId.Length > 0? long.Parse(userId) : null,
+                UserId: userId.Length > 0 ? long.Parse(userId) : null,
                 Email: email,
                 Nickname: name
             ));
