@@ -13,7 +13,7 @@ namespace Web.Controllers
 {
     [ApiController]
     [Route("api/private/[controller]")]
-    public class ChatController: ControllerBase
+    public class ChatController : ControllerBase
     {
         private readonly IMediator _mediator;
         private readonly IHubContext<ChatHub, IChatHub> _chatHubContext;
@@ -28,15 +28,21 @@ namespace Web.Controllers
         {
             try
             {
-                var chats = await _mediator.Send(new GetChatsQuery(1));
+                if (HttpContext.Items.TryGetValue("UserId", out object userId))
+                {
+                   var userIdValue = long.Parse(userId.ToString());
 
-                return Ok(chats);
+                    var chats = await _mediator.Send(new GetChatsQuery(userIdValue));
+
+                    return Ok(chats);
+                }
+
+                return NotFound();
             }
             catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
-
         }
 
         [HttpPost]
@@ -45,9 +51,15 @@ namespace Web.Controllers
             try
             {
                 await _mediator.Send(createChatCommand);
-                var chats = await _mediator.Send(new GetChatsQuery(1));
 
-                _chatHubContext.Clients.All.GetChatsClient(chats);
+                if (HttpContext.Items.TryGetValue("UserId", out object userId))
+                {
+                   var userIdValue = long.Parse(userId.ToString());
+
+                    var chats = await _mediator.Send(new GetChatsQuery(userIdValue));
+
+                    _chatHubContext.Clients.All.GetChatsClient(chats);
+                }
 
                 return Ok();
             }
@@ -64,9 +76,15 @@ namespace Web.Controllers
             try
             {
                 await _mediator.Send(new UpdateChatCommand(chatId, updateChatRequest.Title, updateChatRequest.UsersId));
-                var chats = await _mediator.Send(new GetChatsQuery(1));
 
-                _chatHubContext.Clients.All.GetChatsClient(chats);
+                if (HttpContext.Items.TryGetValue("UserId", out object userId))
+                {
+                    var userIdValue = long.Parse(userId.ToString());
+
+                    var chats = await _mediator.Send(new GetChatsQuery(userIdValue));
+
+                    _chatHubContext.Clients.All.GetChatsClient(chats);
+                }
 
                 return Ok();
             }
@@ -82,9 +100,15 @@ namespace Web.Controllers
             try
             {
                 await _mediator.Send(new DeleteChatCommand(chatId));
-                var chats = await _mediator.Send(new GetChatsQuery(1));
 
-                _chatHubContext.Clients.All.GetChatsClient(chats);
+                if (HttpContext.Items.TryGetValue("UserId", out object userId))
+                {
+                    var userIdValue = long.Parse(userId.ToString());
+
+                    var chats = await _mediator.Send(new GetChatsQuery(userIdValue));
+
+                    _chatHubContext.Clients.All.GetChatsClient(chats);
+                }
 
                 return Ok();
             }

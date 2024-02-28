@@ -51,8 +51,14 @@ namespace Web.Controllers
             {
                 await _mediator.Send(new CreateMessageCommand(createMessageRequest.Value, createMessageRequest.ChatRoomId, 1));
 
-                var chats = await _mediator.Send(new GetMessagesQuery(createMessageRequest.ChatRoomId));
-                _messageHubContext.Clients.All.GetMessagesClient(chats);
+                if (HttpContext.Items.TryGetValue("UserId", out object userId))
+                {
+                    var userIdValue = long.Parse(userId.ToString());
+
+                    var messages = await _mediator.Send(new GetMessagesQuery(createMessageRequest.ChatRoomId));
+
+                    _messageHubContext.Clients.All.GetMessagesClient(messages);
+                }
 
                 return Ok();
             }
@@ -69,13 +75,23 @@ namespace Web.Controllers
             {
                 await _mediator.Send(new UpdateMessageCommand(messageId, updateMessageRequest.Value));
 
+                if (HttpContext.Items.TryGetValue("UserId", out object userId) && updateMessageRequest.ChatRoomId is not null)
+                {
+                    var userIdValue = long.Parse(userId.ToString());
+
+                    var messages = await _mediator.Send(new GetMessagesQuery((long)updateMessageRequest.ChatRoomId));
+
+                    _messageHubContext.Clients.All.GetMessagesClient(messages);
+                }
+
+                return Ok();
+
                 //if(updateMessageRequest.ChatRoomId is not  null)
                 //{
                 //    var chats = await _mediator.Send(new GetMessagesQuery(updateMessageRequest.ChatRoomId));
                 //    _messageHubContext.Clients.All.GetMessagesClient(chats);
                 //}
 
-                return Ok();
             }
             catch (Exception ex)
             {

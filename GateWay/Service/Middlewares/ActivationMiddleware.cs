@@ -7,13 +7,13 @@ using System.IdentityModel.Tokens.Jwt;
 
 namespace Service.Middlewares
 {
-    public class AuthenticationMiddleware
+    public class ActivationMiddleware
     {
         private readonly RequestDelegate _next;
         private readonly ApiOptions _options;
         private readonly IHttpService _httpService;
 
-        public AuthenticationMiddleware(RequestDelegate next,
+        public ActivationMiddleware(RequestDelegate next,
             IOptions<ApiOptions> options,
             IHttpService httpService)
         {
@@ -24,35 +24,14 @@ namespace Service.Middlewares
 
         public async Task InvokeAsync(HttpContext context)
         {
-            string authToken = context.Request.Headers["Authorization"];
-
-            if(authToken != null)
-            {
-                authToken = authToken.Split(' ')[1];
-            }
-
-            var accessToken = context.Request.Query["access_token"];
-
-            var token = "";
-
-            var path = context.Request.Path;
-
-
-            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/api/private/chat-hub"))
-            {
-                // получаем токен из строки запроса
-                token = accessToken;
-            }
-            else
-            {
-                token = authToken;
-            }
-
+            string token = context.Request.Headers["Authorization"];
 
             var handler = new JwtSecurityTokenHandler();
 
-            if(token is not null)
+            if (token is not null)
             {
+                token = token.Split(' ')[1];
+
                 var res = await _httpService.Send<AccountDataResponse>(
                     endpoint: $"{_options.Authentication}/check-auth",
                     httpMethod: HttpMethod.Get,
@@ -63,14 +42,20 @@ namespace Service.Middlewares
                 {
                     context.Response.StatusCode = (int)res.Code; // Unauthorized
 
-                    await context.Response.WriteAsync("User is not authenticated");
-                    return;
+                    if((int)res.Code != 403)
+                    {
+                        await context.Response.WriteAsync("User is not authenticated");
+                        return;
+                    }
                 }
 
-                context.Items["Id"] = ((HttpResponse<AccountDataResponse>)res).Result.Id;
-                context.Items["Nickname"] = ((HttpResponse<AccountDataResponse>)res).Result.Nickname;
-                context.Items["UserId"] = ((HttpResponse<AccountDataResponse>)res).Result.UserId;
-                context.Items["Email"] = ((HttpResponse<AccountDataResponse>)res).Result.Email;
+                if(((HttpResponse<AccountDataResponse>)res).Result is not null)
+                {
+                    context.Items["Id"] = ((HttpResponse<AccountDataResponse>)res).Result.Id;
+                    context.Items["Nickname"] = ((HttpResponse<AccountDataResponse>)res).Result.Nickname;
+                    context.Items["UserId"] = ((HttpResponse<AccountDataResponse>)res).Result.UserId;
+                    context.Items["Email"] = ((HttpResponse<AccountDataResponse>)res).Result.Email;
+                }
 
                 await _next(context);
                 return;

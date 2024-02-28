@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.SignalR;
 using Models.Responses;
 using Service.Chats.Queries.GetChats;
+using System.Web.Http;
 using Web.Commons;
 
 namespace Web.Hubs
@@ -14,13 +15,25 @@ namespace Web.Hubs
         {
             _mediator = mediator;
         }
+
         public async Task<GetChatsResponse> GetChats()
         {
-            var res = await _mediator.Send(new GetChatsQuery(1));
+            var httpContext = Context.GetHttpContext();
 
-            await Clients.All.GetChatsClient(res);
+            if (httpContext != null && httpContext.Items.TryGetValue("UserId", out object userId))
+            {
+                // Используем данные пользователя
+                var userIdValue = long.Parse(userId.ToString());
 
-            return res;
+                var chats = await _mediator.Send(new GetChatsQuery(userIdValue));
+
+                await Clients.All.GetChatsClient(chats);
+
+                return chats;
+            }
+
+            throw new ArgumentNullException("UserId");
         }
+
     }
 }

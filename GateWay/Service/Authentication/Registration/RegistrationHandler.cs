@@ -7,7 +7,7 @@ using Service.Options;
 
 namespace Service.Authentication.Registration
 {
-    public class RegistrationHandler : IRequestHandler<RegistrationCommand, RegistrationResponse>
+    public class RegistrationHandler : IRequestHandler<RegistrationCommand>
     {
         private readonly ApiOptions _options;
         private readonly IHttpService _httpService;
@@ -17,21 +17,13 @@ namespace Service.Authentication.Registration
             _options = options.Value ?? throw new ArgumentNullException(nameof(options));
             _httpService = httpService;
         }
-        public async Task<RegistrationResponse?> Handle(RegistrationCommand request, CancellationToken cancellationToken)
+        public async Task Handle(RegistrationCommand request, CancellationToken cancellationToken)
         {
-            var res = await _httpService.Send<LoginRequest, LoginResponse>(
+            await _httpService.Send<RegistrationRequest>(
                 endpoint: $"{_options.Authentication}/registration",
                 httpMethod: HttpMethod.Post,
-                body: new LoginRequest(request.Email, request.Password)
+                body: new RegistrationRequest(request.Email, request.Nickname, request.Password)
             );
-
-            if (res.Status)
-            {
-
-                return ((HttpResponse<RegistrationResponse>)res).Result;
-            }
-
-            return null;
         }
     }
 }

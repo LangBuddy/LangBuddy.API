@@ -4,5 +4,6 @@
     {
         public string Authentication { get; set; }
         public string Chat { get; set; }
+        public string Accounts { get; set; }
     }
 }

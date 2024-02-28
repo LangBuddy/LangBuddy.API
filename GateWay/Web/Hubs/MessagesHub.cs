@@ -14,9 +14,9 @@ namespace Web.Hubs
         {
             _mediator = mediator;
         }
-        public async Task<List<GetMessagesResponse>> GetMessages()
+        public async Task<List<GetMessagesResponse>> GetMessages(long chatId)
         {
-            var res = await _mediator.Send(new GetMessagesQuery(1));
+            var res = await _mediator.Send(new GetMessagesQuery(chatId));
 
             await Clients.All.GetMessagesClient(res);
 

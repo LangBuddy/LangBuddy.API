@@ -14,9 +14,17 @@ namespace Service.Http
             _httpClient = new HttpClient();
         }
 
-        public async Task<HttpResponseDefault> Send<TRequest, TResponse>(string endpoint, HttpMethod httpMethod, TRequest body)
+        public async Task<HttpResponseDefault> Send<TRequest, TResponse>(string endpoint,
+            HttpMethod httpMethod,
+            TRequest body,
+            string? token = null)
         {
             var request = new HttpRequestMessage(httpMethod, endpoint);
+
+            if (token is not null)
+            {
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            }
 
             if (body != null)
             {
@@ -26,26 +34,37 @@ namespace Service.Http
             }
 
             var response = await _httpClient.SendAsync(request);
+            var content = await response.Content.ReadFromJsonAsync<TResponse>();
 
-            if (response.IsSuccessStatusCode)
+            if (content is not null)
             {
-                var content = await response.Content.ReadFromJsonAsync<TResponse>();
-
                 return new HttpResponse<TResponse>
                 {
-                    Status = true,
+                    Status = response.IsSuccessStatusCode,
                     Code = response.StatusCode,
-                    Result = content
+                    Result = content,
                 };
             }
 
-            return new HttpResponseDefault { Status = false, Code = response.StatusCode };
+            return new HttpResponseDefault
+            {
+                Status = response.IsSuccessStatusCode,
+                Code = response.StatusCode,
+            };
 
         }
 
-        public async Task<HttpResponseDefault> Send<TRequest>(string endpoint, HttpMethod httpMethod, TRequest body)
+        public async Task<HttpResponseDefault> Send<TRequest>(string endpoint,
+            HttpMethod httpMethod,
+            TRequest body,
+            string? token = null)
         {
             var request = new HttpRequestMessage(httpMethod, endpoint);
+
+            if (token is not null)
+            {
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            }
 
             if (body != null)
             {
@@ -63,19 +82,25 @@ namespace Service.Http
             };
         }
 
-        public async Task<HttpResponseDefault> Send<TResponse>(string endpoint, HttpMethod httpMethod)
+        public async Task<HttpResponseDefault> Send<TResponse>(string endpoint,
+            HttpMethod httpMethod,
+            string? token = null)
         {
             var request = new HttpRequestMessage(httpMethod, endpoint);
 
-            var response = await _httpClient.SendAsync(request);
-
-            if (response.IsSuccessStatusCode)
+            if (token is not null)
             {
-                var content = await response.Content.ReadFromJsonAsync<TResponse>();
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            }
 
+            var response = await _httpClient.SendAsync(request);
+            var content = await response.Content.ReadFromJsonAsync<TResponse>();
+
+            if(content is not null)
+            {
                 return new HttpResponse<TResponse>
                 {
-                    Status = true,
+                    Status = response.IsSuccessStatusCode,
                     Code = response.StatusCode,
                     Result = content,
                 };
@@ -83,12 +108,14 @@ namespace Service.Http
 
             return new HttpResponseDefault
             {
-                Status = false,
+                Status = response.IsSuccessStatusCode,
                 Code = response.StatusCode,
             };
         }
 
-        public async Task<HttpResponseDefault> Send(string endpoint, HttpMethod httpMethod, string? token = null)
+        public async Task<HttpResponseDefault> Send(string endpoint,
+            HttpMethod httpMethod,
+            string? token = null)
         {
             var request = new HttpRequestMessage(httpMethod, endpoint);
 

@@ -55,8 +55,6 @@ builder.Services.AddSwaggerGen(opt =>
 
 var app = builder.Build();
 
-app.MapHub<ChatHub>("/api/private/chat-hub");
-app.MapHub<MessagesHub>("/api/private/messages-hub");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Debug")
@@ -67,6 +65,9 @@ if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Debug
 
 app.UseHttpsRedirection();
 
+app.MapHub<ChatHub>("/api/private/chat-hub");
+app.MapHub<MessagesHub>("/api/private/messages-hub");
+
 app.UseCors(x => x
         .AllowAnyMethod()
         .AllowAnyHeader()
@@ -75,11 +76,20 @@ app.UseCors(x => x
 
 app.UseWhen(
     context => 
-        context.Request.Path.StartsWithSegments("/api/Authentication/check-auth") || 
+        context.Request.Path.StartsWithSegments("/api/Authentication/check-auth") ||
         context.Request.Path.StartsWithSegments("/api/private"),
     appBuilder =>
     {
-        appBuilder.UseAuthenticationMiddleware();
+        appBuilder.UseMiddleware<AuthenticationMiddleware>();
+    }
+);
+
+app.UseWhen(
+    context =>
+        context.Request.Path.StartsWithSegments("/api/Authentication/personal-information"),
+    appBuilder =>
+    {
+        appBuilder.UseMiddleware<ActivationMiddleware>();
     }
 );
 
