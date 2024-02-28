@@ -148,8 +148,25 @@ services:
       networks:
         - langbaddy-deb
 
-  langbaddy-gate-way:
-    container_name: 'langbaddy-gate-way'
+  langbaddy-gate-way-nginx: 
+    image: nginx:latest
+    container_name: langbaddy-gate-way-nginx
+    build:
+      context: langbaddy-gate-way-nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - /etc/letsencrypt/:/etc/letsencrypt/
+    ports:
+      - "80:80"
+      # - 22000:80
+    depends_on:
+      - langbaddy-gate-way-1
+      - langbaddy-gate-way-2
+    networks:
+      - langbaddy-deb
+
+  langbaddy-gate-way-1:
+    container_name: 'langbaddy-gate-way-1'
     depends_on:
       - 'langbaddy-db'
     build:
@@ -163,7 +180,26 @@ services:
       - 8001:80
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - LOGS_PATH=/var/log/langbaddy-gate-way
+      - LOGS_PATH=/var/log/langbaddy-gate-way-1
+    networks:
+      - langbaddy-deb
+
+  langbaddy-gate-way-2:
+    container_name: 'langbaddy-gate-way-2'
+    depends_on:
+      - 'langbaddy-db'
+    build:
+      dockerfile: ./Web/Dockerfile
+      context: ./GateWay
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+    ports:
+      - 8005:80
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - LOGS_PATH=/var/log/langbaddy-gate-way-2
     networks:
       - langbaddy-deb
 
